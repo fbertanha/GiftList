@@ -1,4 +1,11 @@
 <resources>
     <string name="app_name">Gift List</string>
     <string name="action_settings">Settings</string>
+    <string name="salvar">Salvar</string>
+    <string name="cancelar">Cancelar</string>
+    <string name="nome_da_lista">Nome da lista...</string>
+    <string name="title_activity_itens">ItensActivity</string>
+    <string name="descricao_do_item">Descrição do Item</string>
+    <string name="link">Link</string>
+    <string name="valor">R$..</string>
 </resources>
