@@ -1,37 +1,50 @@
 package bertanha.com.br.giftlist.activity;
 
-import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.EditText;
+import android.view.View;
+import android.widget.Toast;
 
+import com.firebase.ui.auth.AuthUI;
+import com.firebase.ui.auth.ErrorCodes;
+import com.firebase.ui.auth.IdpResponse;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.Query;
 
-import java.util.Date;
+import java.util.Arrays;
+import java.util.List;
 
 import bertanha.com.br.giftlist.R;
-import bertanha.com.br.giftlist.adapter.ListasAdapter;
 import bertanha.com.br.giftlist.model.Lista;
+import bertanha.com.br.giftlist.ui.adapter.ListaAdapter;
+import bertanha.com.br.giftlist.ui.dialog.ListaDialog;
+import bertanha.com.br.giftlist.ui.touch.ListaTouch;
 
+import static bertanha.com.br.giftlist.util.Utils.getAuth;
 import static bertanha.com.br.giftlist.util.Utils.getDatabase;
+import static bertanha.com.br.giftlist.util.Utils.getMessaging;
+import static com.google.firebase.auth.FirebaseAuth.getInstance;
 
 public class ListasActivity extends AppCompatActivity {
 
     private String TAG = getClass().getName();
     DatabaseReference mDatabaseRef;
     private RecyclerView mRecyclerView;
-    private ListasAdapter mAdapter;
+    private ListaAdapter mAdapter;
+    private static final int RC_SIGN_IN = 123;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -43,31 +56,10 @@ public class ListasActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(ListasActivity.this);
-                // Get the layout inflater
-                final LayoutInflater inflater = getLayoutInflater();
-
-                // Inflate and set the layout for the dialog
-                // Pass null as the parent view because its going in the dialog layout
-                builder.setView(inflater.inflate(R.layout.dialog_lista, null))
-                        // Add action buttons
-                        .setPositiveButton(R.string.salvar, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int id) {
-                                DatabaseReference listasRef = mDatabaseRef.child("listas");
-                                String key = listasRef.push().getKey();
-                                EditText nome = (EditText) ((AlertDialog) dialog).findViewById(R.id.dialog_lista_nome);
-                                Lista novaLista = new Lista(nome.getText().toString());
-
-                                listasRef.child(key).setValue(novaLista);
-                            }
-                        })
-                        .setNegativeButton(R.string.cancelar, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                //LoginDialogFragment.this.getDialog().cancel();
-                            }
-                        });
-                builder.show();
+                //New Lista
+                DatabaseReference newListaRef = mDatabaseRef.child("listas").push();
+                ListaDialog listaDialog = new ListaDialog(ListasActivity.this, newListaRef);
+                listaDialog.show();
             }
         });
 
@@ -77,100 +69,105 @@ public class ListasActivity extends AppCompatActivity {
         // Show most recent items at the top
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         mRecyclerView.setLayoutManager(layoutManager);
-        mRecyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
+        //mRecyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
 
-//        // Write a message to the database
-//        database = FirebaseDatabase.getInstance();
-//        lista = findViewById(R.id.content_main_lista);
-//        // Show most recent items at the top
-//        LinearLayoutManager layoutManager = new LinearLayoutManager(this);
-//        lista.setLayoutManager(layoutManager);
-//
-//        DatabaseReference myRef = database.getReference().child("listas");
-//        final ListasAdapter listaItensAdapter = new ListasAdapter(this, myRef);
-//        lista.setAdapter(listaItensAdapter);
-//
-//        // Make sure new events are visible
-//        listaItensAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
-//            @Override
-//            public void onItemRangeChanged(int positionStart, int itemCount) {
-//                lista.smoothScrollToPosition(listaItensAdapter.getItemCount());
-//            }
-//        });
-//
-//        //myRef.setValue("Hello, Worlsd!");
-//        //String key = myRef.child("listas").push().getKey();
-//
-//        myRef.addChildEventListener(new ChildEventListener() {
-//
-//            @Override
-//            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-//                // This method is called once with the initial value and again
-//                // whenever data at this location is updated.
-//                Lista value = dataSnapshot.getValue(Lista.class);
-//                Log.d(TAG, "Value is: " + value);
-//            }
-//
-//            @Override
-//            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
-//                // This method is called once with the initial value and again
-//                // whenever data at this location is updated.
-//                Lista value = dataSnapshot.getValue(Lista.class);
-//                Log.d(TAG, "Value is: " + value);
-//            }
-//
-//            @Override
-//            public void onChildRemoved(DataSnapshot dataSnapshot) {
-//
-//            }
-//
-//            @Override
-//            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
-//
-//            }
-//
-//            @Override
-//            public void onCancelled(DatabaseError databaseError) {
-//                // Failed to read value
-//                Log.w(TAG, "Failed to read value.", databaseError.toException());
-//            }
-//        });
-//
-//        //myRef.child("listas/" + key).setValue(new Lista("Lista ROlissoa", new Date(), null, 129.9));
-//        myRef.child("1").setValue(new Lista("Lista ROlissoa", new Date(), null, 129.9));
-//        myRef.child("2").setValue(new Lista("Lista ROlissoa2", new Date(), null, 329.9));
-//        myRef.child("3").setValue(new Lista("Lista ROlissoa2", new Date(), null, 429.9));
-//        //Log.e(TAG, "onCreate: " + myRef.child("nome"));
+        setupNotifications();
 
-        test();
+        if (getAuth().getCurrentUser() == null) {
+            signIn();
+        } else {
+            Log.i(TAG, "onCreate: " + getAuth().getCurrentUser().getUid());
+        }
+
     }
 
-    private void test() {
-        DatabaseReference listas = mDatabaseRef.child("listas");
-//        listas.keepSynced(true);
-//
-//        listas.child("1").setValue(new Lista("Lista ROlissoa", new Date(), null, 129.9));
-//        listas.child("2").setValue(new Lista("Lista ROlissoa2", new Date(), null, 329.9));
-//        listas.child("3").setValue(new Lista("Lista ROlissoa2", new Date(), null, 429.9));
-
-        //listas.equalTo("this").
+    private void signIn() {
+        startActivityForResult(
+                AuthUI.getInstance()
+                        .createSignInIntentBuilder()
+                        .setAvailableProviders(Arrays.asList(
+                                //new AuthUI.IdpConfig.PhoneBuilder().build(),
+                                new AuthUI.IdpConfig.GoogleBuilder().build(),
+                                new AuthUI.IdpConfig.FacebookBuilder().build()
+                                //new AuthUI.IdpConfig.TwitterBuilder().build())
+                        ))
+                        .build(),
+                RC_SIGN_IN);
     }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        // RC_SIGN_IN is the request code you passed into startActivityForResult(...) when starting the sign in flow.
+        if (requestCode == RC_SIGN_IN) {
+            IdpResponse response = IdpResponse.fromResultIntent(data);
+
+            // Successfully signed in
+            if (resultCode == RESULT_OK) {
+                //startActivity(SignedInActivity.createIntent(this, response));
+                //finish();
+
+                Toast.makeText(this, "Logado como " + getAuth().getCurrentUser().getDisplayName(), Toast.LENGTH_LONG).show();
+                Log.i(TAG, "onActivityResult: " + FirebaseAuth.getInstance().getCurrentUser().getPhotoUrl().toString());
+                return;
+            } else {
+                finish();
+                // Sign in failed
+                if (response == null) {
+                    // User pressed back button
+                    //showSnackbar(R.string.sign_in_cancelled);
+                    return;
+                }
+
+                if (response.getErrorCode() == ErrorCodes.NO_NETWORK) {
+                    //howSnackbar(R.string.no_internet_connection);
+                    return;
+                }
+
+                if (response.getErrorCode() == ErrorCodes.UNKNOWN_ERROR) {
+                    //showSnackbar(R.string.unknown_error);
+                    return;
+                }
+            }
+
+            //showSnackbar(R.string.unknown_sign_in_response);
+        }
+    }
+
+    private void setupNotifications() {
+        getMessaging().subscribeToTopic("listas");
+        getMessaging().subscribeToTopic("itens");
+    }
+
 
     @Override
     protected void onStart() {
         super.onStart();
 
-        DatabaseReference mRef = mDatabaseRef.child("listas");
-        mAdapter = new ListasAdapter(this, mRef);
+        Query listasQuery = mDatabaseRef.child("listas").limitToFirst(50);
+
+        FirebaseRecyclerOptions options = new FirebaseRecyclerOptions.Builder<Lista>()
+                .setQuery(listasQuery, Lista.class)
+                .build();
+        mAdapter = new ListaAdapter(options);
         mRecyclerView.setAdapter(mAdapter);
 
-        // Make sure new events are visible
-        mAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
-            @Override
-            public void onItemRangeChanged(int positionStart, int itemCount) {
-                mRecyclerView.smoothScrollToPosition(mAdapter.getItemCount());
-            }
-        });
+        ItemTouchHelper.SimpleCallback simpleCallback = new ListaTouch(0, ItemTouchHelper.LEFT, mAdapter, this);
+        ItemTouchHelper touchHelper = new ItemTouchHelper(simpleCallback);
+        touchHelper.attachToRecyclerView(mRecyclerView);
+
+        if (mAdapter != null) {
+            mAdapter.startListening();
+        }
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mAdapter != null) {
+            mAdapter.stopListening();
+        }
     }
 
     @Override
@@ -189,6 +186,8 @@ public class ListasActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
+            getAuth().signOut();
+            finish();
             return true;
         }
 

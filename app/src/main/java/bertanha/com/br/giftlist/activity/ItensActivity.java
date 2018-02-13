@@ -9,30 +9,34 @@ import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
+import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.database.Query;
 
 import bertanha.com.br.giftlist.R;
-import bertanha.com.br.giftlist.adapter.ItensAdapter;
+import bertanha.com.br.giftlist.ui.adapter.ItemAdapter;
 import bertanha.com.br.giftlist.model.Item;
-import bertanha.com.br.giftlist.model.Lista;
+import bertanha.com.br.giftlist.ui.dialog.ItemDialog;
+import bertanha.com.br.giftlist.ui.touch.ItemTouch;
+import bertanha.com.br.giftlist.ui.touch.ListaTouch;
 
 import static bertanha.com.br.giftlist.util.Utils.getDatabase;
 
 public class ItensActivity extends AppCompatActivity {
 
     private String TAG = getClass().getName();
+    public static final String EXTRA_LISTA_KEY = "lista_key";
+    private String mListaKey;
+
     DatabaseReference mDatabaseRef;
+    DatabaseReference mItensRef;
     private RecyclerView mRecyclerView;
-    private ItensAdapter mAdapter;
-    private Lista mLista;
+    private ItemAdapter mAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,70 +49,53 @@ public class ItensActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                AlertDialog.Builder builder = new AlertDialog.Builder(ItensActivity.this);
-                // Get the layout inflater
-                final LayoutInflater inflater = getLayoutInflater();
-
-                // Inflate and set the layout for the dialog
-                // Pass null as the parent view because its going in the dialog layout
-                builder.setView(inflater.inflate(R.layout.dialog_item, null))
-                        // Add action buttons
-                        .setPositiveButton(R.string.salvar, new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int id) {
-                                DatabaseReference itensRef = mDatabaseRef.child("itens");
-
-                                String itemKey = itensRef.push().getKey();
-                                EditText descricao = (EditText) ((AlertDialog) dialog).findViewById(R.id.dialog_item_nome);
-                                EditText link = (EditText) ((AlertDialog) dialog).findViewById(R.id.item_link);
-                                Item novoItem = new Item(descricao.getText().toString(), link.getText().toString());
-                                novoItem.setAtivo(false);
-
-                                itensRef.child(mLista.getCodigo()).child(itemKey).setValue(novoItem);
-                            }
-                        })
-                        .setNegativeButton(R.string.cancelar, new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int id) {
-                                //LoginDialogFragment.this.getDialog().cancel();
-                            }
-                        });
-                builder.show();
+                //Novo Item
+                DatabaseReference newItemRef = mItensRef.push();
+                ItemDialog itemDialog = new ItemDialog(ItensActivity.this, newItemRef);
+                itemDialog.show();
             }
         });
 
-        mLista = (Lista) getIntent().getExtras().get("lista");
-
-        if (mLista != null) {
-            Log.i(TAG, "onCreate: " + mLista.getCodigo());
-
+        mListaKey = getIntent().getStringExtra(EXTRA_LISTA_KEY);
+        if (mListaKey == null) {
+            throw new IllegalArgumentException("Must pass EXTRA_LISTA_KEY");
         }
 
         mDatabaseRef = getDatabase().getReference();
-
+        mItensRef = mDatabaseRef.child("itens").child(mListaKey);
         mRecyclerView = (RecyclerView) findViewById(R.id.content_itens_lista);
-        // Show most recent items at the top
         LinearLayoutManager layoutManager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         mRecyclerView.setLayoutManager(layoutManager);
-        mRecyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
+        //mRecyclerView.addItemDecoration(new DividerItemDecoration(this, LinearLayoutManager.VERTICAL));
     }
 
     @Override
     protected void onStart() {
         super.onStart();
+        Query itensQuery = mItensRef.limitToFirst(50);
 
-        DatabaseReference itensRef = mDatabaseRef.child("itens/" + mLista.getCodigo());
-
-
-        mAdapter = new ItensAdapter(this, itensRef);
+        FirebaseRecyclerOptions options = new FirebaseRecyclerOptions.Builder<Item>()
+                .setQuery(itensQuery, Item.class)
+                .build();
+        mAdapter = new ItemAdapter(options);
         mRecyclerView.setAdapter(mAdapter);
 
-        // Make sure new events are visible
-        mAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
-            @Override
-            public void onItemRangeChanged(int positionStart, int itemCount) {
-                mRecyclerView.smoothScrollToPosition(mAdapter.getItemCount());
-            }
-        });
+        ItemTouchHelper.SimpleCallback simpleCallback =  new ItemTouch(0, ItemTouchHelper.LEFT, mAdapter, this);
+        ItemTouchHelper touchHelper = new ItemTouchHelper(simpleCallback);
+        touchHelper.attachToRecyclerView(mRecyclerView);
+
+        if (mAdapter != null) {
+            mAdapter.startListening();
+        }
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (mAdapter != null) {
+            mAdapter.stopListening();
+        }
     }
 
 }

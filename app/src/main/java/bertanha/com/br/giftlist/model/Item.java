@@ -1,7 +1,6 @@
 package bertanha.com.br.giftlist.model;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 
 /**
  * Created by berta on 2/4/2018.
@@ -9,36 +8,37 @@ import java.math.BigDecimal;
 
 public class Item implements Serializable{
     private String codigo;
-    private String nome;
-    private BigDecimal valor;
+    private String descricao;
+    private Double valor;
     private String link;
     private Boolean ativo;
 
     public Item() {
+
     }
 
-    public Item(String nome) {
-        this.nome = nome;
+    public Item(String descricao) {
+        this.descricao = descricao;
     }
 
-    public Item(String nome, String link) {
-        this.nome = nome;
+    public Item(String descricao, String link) {
+        this.descricao = descricao;
         this.link = link;
     }
 
-    public String getNome() {
-        return nome;
+    public String getDescricao() {
+        return descricao;
     }
 
-    public void setNome(String nome) {
-        this.nome = nome;
+    public void setDescricao(String descricao) {
+        this.descricao = descricao;
     }
 
-    public BigDecimal getValor() {
+    public Double getValor() {
         return valor;
     }
 
-    public void setValor(BigDecimal valor) {
+    public void setValor(Double valor) {
         this.valor = valor;
     }
 

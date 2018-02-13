@@ -14,6 +14,7 @@ public class Lista implements Serializable{
     private Date dataDeCriacao;
     private List<Item> itens;
     private Double total;
+    private String imagem;
 
     public Lista() {
     }
@@ -72,5 +73,24 @@ public class Lista implements Serializable{
 
     public void setCodigo(String codigo) {
         this.codigo = codigo;
+    }
+
+    public String getImagem() {
+        return imagem;
+    }
+
+    public void setImagem(String imagem) {
+        this.imagem = imagem;
+    }
+
+    @Override
+    public String toString() {
+        return "Lista{" +
+                "codigo='" + codigo + '\'' +
+                ", nome='" + nome + '\'' +
+                ", dataDeCriacao=" + dataDeCriacao +
+                ", itens=" + itens +
+                ", total=" + total +
+                '}';
     }
 }
