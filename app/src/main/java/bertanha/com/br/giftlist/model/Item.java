@@ -12,6 +12,8 @@ public class Item implements Serializable{
     private Double valor;
     private String link;
     private Boolean ativo;
+    private String imagem;
+
 
     public Item() {
 
@@ -56,5 +58,21 @@ public class Item implements Serializable{
 
     public void setAtivo(Boolean ativo) {
         this.ativo = ativo;
+    }
+
+    public String getCodigo() {
+        return codigo;
+    }
+
+    public void setCodigo(String codigo) {
+        this.codigo = codigo;
+    }
+
+    public String getImagem() {
+        return imagem;
+    }
+
+    public void setImagem(String imagem) {
+        this.imagem = imagem;
     }
 }

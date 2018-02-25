@@ -3,10 +3,8 @@ package bertanha.com.br.giftlist.util;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Query;
 import com.google.firebase.messaging.FirebaseMessaging;
 
-import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
@@ -24,7 +22,7 @@ public class Utils {
     private static FirebaseAuth mAuth;
 
     public static FirebaseDatabase getDatabase() {
-        if(mDatabase == null) {
+        if (mDatabase == null) {
             mDatabase = FirebaseDatabase.getInstance();
             mDatabase.setPersistenceEnabled(true);
         }
@@ -44,6 +42,7 @@ public class Utils {
         }
         return mAuth;
     }
+
 
     public static DatabaseReference getQuery(String path) {
         return getDatabase().getReference().child(path);

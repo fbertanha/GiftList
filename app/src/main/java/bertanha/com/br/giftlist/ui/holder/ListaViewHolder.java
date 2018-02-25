@@ -6,7 +6,7 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.squareup.picasso.Picasso;
+import com.bumptech.glide.Glide;
 
 import bertanha.com.br.giftlist.R;
 import bertanha.com.br.giftlist.model.Lista;
@@ -46,6 +46,9 @@ public class ListaViewHolder extends RecyclerView.ViewHolder {
 
         nome.setText(lista.getNome());
         total.setText(Utils.formataMoeda(valorFormatado));
-        Picasso.with(itemView.getContext()).load(lista.getImagem()).into(imagem);
+        //Picasso.with(itemView.getContext()).load(lista.getImagem()).into(imagem);
+        Glide.with(itemView.getContext())
+                .load(lista.getImagem())
+                .into(imagem);
     }
 }

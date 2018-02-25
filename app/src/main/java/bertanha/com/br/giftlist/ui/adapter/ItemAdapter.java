@@ -5,6 +5,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.util.Patterns;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,9 +17,10 @@ import com.firebase.ui.database.FirebaseRecyclerOptions;
 import com.google.firebase.database.DatabaseReference;
 
 import bertanha.com.br.giftlist.R;
-import bertanha.com.br.giftlist.activity.ItensActivity;
 import bertanha.com.br.giftlist.model.Item;
+import bertanha.com.br.giftlist.task.UpdateItemImage;
 import bertanha.com.br.giftlist.ui.dialog.ItemDialog;
+import bertanha.com.br.giftlist.ui.dialog.ItemImageDialog;
 import bertanha.com.br.giftlist.ui.holder.ItemViewHolder;
 
 /**
@@ -86,7 +88,23 @@ public class ItemAdapter extends FirebaseRecyclerAdapter<Item, ItemViewHolder>{
             }
         });
 
-        holder.bindItem(model, null);
+        //View Image
+        holder.imagem.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ItemImageDialog itemImageDialog = new ItemImageDialog(v.getContext(), itemRef, model);
+                itemImageDialog.show();
+
+            }
+        });
+        model.setCodigo(itemRef.getKey());
+
+        //update image if not exists
+        if (model.getImagem() == null) {
+            UpdateItemImage updateItemImage = new UpdateItemImage(itemRef, model);
+            updateItemImage.execute();
+        }
+        holder.bindItem(model);
 
     }
 

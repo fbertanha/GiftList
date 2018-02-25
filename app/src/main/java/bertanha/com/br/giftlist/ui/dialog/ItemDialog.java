@@ -9,14 +9,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.ValueEventListener;
 
 import bertanha.com.br.giftlist.R;
 import bertanha.com.br.giftlist.model.Item;
-import bertanha.com.br.giftlist.model.Lista;
+import bertanha.com.br.giftlist.task.UpdateItemImage;
 
 /**
  * Created by berta on 2/12/2018.
@@ -92,19 +89,9 @@ public class ItemDialog extends AlertDialog.Builder {
 
                 itemRef.setValue(item);
 
-                //update list total
-//                itemRef.getRoot().child("listas").child(itemRef.getParent().getKey()).addListenerForSingleValueEvent(new ValueEventListener() {
-//                    @Override
-//                    public void onDataChange(DataSnapshot dataSnapshot) {
-//                        itemRef.getRoot().child("listas").child(itemRef.getParent().getKey()).child("total").setValue(dataSnapshot.getValue(Lista.class).getTotal() + item.getValor());
-//                        Log.i(TAG, "onDataChange: " + dataSnapshot.getValue(Lista.class).getTotal());
-//                    }
-//
-//                    @Override
-//                    public void onCancelled(DatabaseError databaseError) {
-//
-//                    }
-//                });
+                UpdateItemImage updateItemImage = new UpdateItemImage(itemRef, item);
+                updateItemImage.execute();
+
 
             }
         });
@@ -114,6 +101,7 @@ public class ItemDialog extends AlertDialog.Builder {
             }
         });
     }
+
 
     @Override
     public AlertDialog show() {
